@@ -1,4 +1,4 @@
-Source of truth: `shared/AGENTS.shared.md` in [aomi-vn/aomi-agent-platform](https://github.com/aomi-vn/aomi-agent-platform). Do not edit the shared block here. Edit the master, then run `scripts/sync-agents-md.sh` in that repository.
+Source of truth: `shared/AGENTS.shared.md` in [aomi-vn/aomi-agents-core](https://github.com/aomi-vn/aomi-agents-core). Do not edit the shared block here. Edit the master, then run `scripts/sync-agents-md.sh` in that repository.
 
 # AGENTS.md: .github
 
@@ -108,7 +108,7 @@ A task is Done only when all of these are true:
 - If a tool needs the file on disk, keep identical real files.
 - If text is out of date, delete it and write it again. Do not keep `.bak` or `.backup` files. Git keeps the history.
 - Keep working trees free of temporary files.
-- Do not commit secret values, tokens, or credentials to a repository or a log. Record only the secret name in the secrets inventory (`secrets/inventory.md` in `aomi-agent-platform`).
+- Do not commit secret values, tokens, or credentials to a repository or a log. Record only the secret name in the secrets inventory (`secrets/inventory.md` in `aomi-agents-core`).
 - Do not add new spend without approval from Tien.
 - Attach proof to every blocker report: a log line, an error message, a link, or a screenshot.
 
