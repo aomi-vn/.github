@@ -1,2 +1,1 @@
-This repo follows aomi-mode (https://github.com/aomi-vn/aomi-mode).
-On start, run aomi-mode-init.
+Aomi agent instructions: https://github.com/aomi-vn/aomi-plugins/blob/main/AGENTS.md
