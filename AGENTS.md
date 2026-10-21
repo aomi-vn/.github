@@ -1,2 +1,3 @@
-This repo follows aomi-mode (https://github.com/aomi-vn/aomi-mode).
-On start, run aomi-mode-init.
+# Shared Aomi instructions
+
+Aomi-level rules: read https://github.com/aomi-vn/aomi-plugins/blob/main/AGENTS.md. If you cannot load it, stop and report; do not proceed on repo rules alone.
