@@ -1,0 +1,33 @@
+# Close idle PRs after 2 days (PLAT-88). PRs only; issues are never touched.
+# Branches are never deleted: Engineering Lead ruled that branch deletion
+# needs an archive tag first.
+name: stale
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # 01:00 UTC (08:00 ICT) daily
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/stale@1e223db275d687790206a7acac4d1a11bd6fe629 # v10.4.0
+        with:
+          days-before-pr-stale: 2
+          days-before-pr-close: 2
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          exempt-pr-labels: keep,hold
+          delete-branch: false
+          stale-pr-message: "No activity for 2 days. This PR closes in 2 more days unless it gets activity or the `keep` or `hold` label."
+          close-pr-message: "Closed after 4 idle days. The branch is kept; reopen the PR or open a new one from main."
