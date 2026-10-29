@@ -26,16 +26,31 @@ on:
         required: false
         type: number
         default: 30
+      needs-json:
+        description: Optional serialized needs map from a caller job (gate-only mode)
+        required: false
+        type: string
+        default: ""
 
 jobs:
   verify:
-    if: ${{ inputs.command != '' }}
+    if: ${{ inputs.command != '' && inputs.needs-json == '' }}
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: astral-sh/setup-uv@v7
+        if: hashFiles('pyproject.toml') != ''
+        with:
+          python-version-file: .python-version
+          enable-cache: true
       - name: Run repository verify command
         run: ${{ inputs.command }}
 
@@ -48,7 +63,7 @@ jobs:
     steps:
       - name: Aggregate job results
         env:
-          NEEDS: ${{ toJSON(needs) }}
+          NEEDS: ${{ inputs.needs-json != '' && inputs.needs-json || toJSON(needs) }}
         run: |
           set -euo pipefail
           printf '%s' "${NEEDS}" | jq -r 'to_entries[] | "\(.key)=\(.value.result)"'
@@ -57,7 +72,7 @@ jobs:
             echo "::error::failed or cancelled: ${bad}. ci-gate fails."
             exit 1
           fi
-          if [ -n "${{ inputs.command }}" ]; then
+          if [ -n "${{ inputs.command }}" ] && [ -z "${{ inputs.needs-json }}" ]; then
             vr=$(printf '%s' "${NEEDS}" | jq -r '.verify.result // empty')
             if [ "${vr}" != "success" ]; then
               echo "::error::verify did not succeed (result=${vr})."
