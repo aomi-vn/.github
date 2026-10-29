@@ -11,4 +11,3 @@ jobs:
     with:
       runs-on: '["self-hosted","aomi-pr-sandbox"]'
       command: "echo 'Replace with repo verify command'"
-    secrets: inherit

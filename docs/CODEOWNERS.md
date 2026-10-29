@@ -6,7 +6,7 @@ GitHub reads **CODEOWNERS only from each application repository** (or from a `.g
 
 1. Copy [`CODEOWNERS.template`](../CODEOWNERS.template) to `.github/CODEOWNERS` (or repo-root `CODEOWNERS`) when bootstrapping a repo.
 2. Replace the catch-all `@aomihq` line with path-specific teams or people as the repo grows.
-3. Keep production-control paths owned by the human prod delegate documented in your runbook (free plan: advisory review, not GitHub rulesets).
+3. Keep production-control paths owned by the human prod delegate documented in your runbook. The org is on **GitHub Team** today; **rulesets** are planned. Until rulesets land, CODEOWNERS is advisory for review routing (poteto enforces merge gates in CI).
 
 ## Example (per repo)
 

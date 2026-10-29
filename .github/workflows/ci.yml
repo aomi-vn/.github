@@ -1,5 +1,5 @@
 # Reusable org CI: optional verify command + mandatory ci-gate aggregator.
-# Callers: aomi-vn/.github/.github/workflows/ci.yml@main
+# Callers: job id `ci` → reusable jobs `verify` (optional) + `ci-gate` (required check: ci / ci-gate).
 # Docs: https://docs.github.com/en/actions/sharing-automations/reusing-workflows
 name: Aomi reusable CI
 
@@ -12,29 +12,24 @@ on:
         type: string
         default: '["self-hosted","aomi-pr-sandbox"]'
       command:
-        description: Shell command for verify; leave empty when the caller only wires the gate pattern
+        description: Shell command for verify; leave empty to skip verify and only aggregate
         required: false
         type: string
         default: ""
       gate-runs-on:
-        description: JSON array of runner labels for ci-gate (host-only, no path filters)
+        description: JSON array of runner labels for ci-gate (PR code stays off aomi-vps)
         required: false
         type: string
-        default: '["self-hosted","aomi-vps"]'
+        default: '["self-hosted","aomi-pr-sandbox"]'
       timeout-minutes:
         description: Timeout for the verify job
         required: false
         type: number
         default: 30
-      needs-json:
-        description: Optional serialized needs map from a caller job (gate-only mode)
-        required: false
-        type: string
-        default: ""
 
 jobs:
   verify:
-    if: ${{ inputs.command != '' && inputs.needs-json == '' }}
+    if: ${{ inputs.command != '' }}
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     timeout-minutes: ${{ inputs.timeout-minutes }}
     permissions:
@@ -52,7 +47,9 @@ jobs:
           python-version-file: .python-version
           enable-cache: true
       - name: Run repository verify command
-        run: ${{ inputs.command }}
+        env:
+          VERIFY_COMMAND: ${{ inputs.command }}
+        run: bash -lc "$VERIFY_COMMAND"
 
   ci-gate:
     needs: [verify]
@@ -63,7 +60,8 @@ jobs:
     steps:
       - name: Aggregate job results
         env:
-          NEEDS: ${{ inputs.needs-json != '' && inputs.needs-json || toJSON(needs) }}
+          NEEDS: ${{ toJSON(needs) }}
+          VERIFY_COMMAND: ${{ inputs.command }}
         run: |
           set -euo pipefail
           printf '%s' "${NEEDS}" | jq -r 'to_entries[] | "\(.key)=\(.value.result)"'
@@ -72,7 +70,7 @@ jobs:
             echo "::error::failed or cancelled: ${bad}. ci-gate fails."
             exit 1
           fi
-          if [ -n "${{ inputs.command }}" ] && [ -z "${{ inputs.needs-json }}" ]; then
+          if [ -n "${VERIFY_COMMAND}" ]; then
             vr=$(printf '%s' "${NEEDS}" | jq -r '.verify.result // empty')
             if [ "${vr}" != "success" ]; then
               echo "::error::verify did not succeed (result=${vr})."
