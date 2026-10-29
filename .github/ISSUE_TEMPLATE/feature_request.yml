@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a scoped improvement
+title: "[feat]: "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: notion
+    attributes:
+      label: Notion AOMI ID
+      placeholder: AOMI-123
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true

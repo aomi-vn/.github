@@ -1,0 +1,13 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  ci:
+    uses: aomi-vn/.github/.github/workflows/ci.yml@main
+    with:
+      runs-on: '["self-hosted","aomi-pr-sandbox"]'
+      command: "echo 'Replace with repo verify command'"
