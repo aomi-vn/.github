@@ -1,0 +1,35 @@
+name: Bug report
+description: Something broken in an Aomi repo
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer one repo per issue. Link the failing commit or PR head SHA when you have it.
+  - type: input
+    id: notion
+    attributes:
+      label: Notion AOMI ID
+      placeholder: AOMI-123
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository
+      placeholder: aomi-vn/aomi-web
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
