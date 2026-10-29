@@ -1,0 +1,132 @@
+name: Aomi baseline
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        required: false
+        type: string
+        default: '["self-hosted","aomi-pr-sandbox"]'
+      verify-command:
+        required: true
+        type: string
+      baseline-ref:
+        required: false
+        type: string
+        default: main
+      timeout-minutes:
+        required: false
+        type: number
+        default: 30
+    secrets:
+      AGENT_REVIEW_API_KEY:
+        required: false
+
+jobs:
+  verify:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: "24"
+      - run: npm ci
+        if: hashFiles('package-lock.json') != ''
+      - uses: astral-sh/setup-uv@v7
+        if: hashFiles('pyproject.toml') != ''
+      - env:
+          VERIFY_COMMAND: ${{ inputs.verify-command }}
+        run: bash -lc "$VERIFY_COMMAND"
+
+  no-comments:
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v5
+        with:
+          repository: aomi-vn/.github
+          ref: ${{ inputs.baseline-ref }}
+          path: .aomi-baseline
+      - run: python3 .aomi-baseline/baseline/no_comments.py "origin/${{ github.base_ref }}"
+
+  typecheck:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: aomi-vn/.github
+          ref: ${{ inputs.baseline-ref }}
+          path: .aomi-baseline
+      - uses: actions/setup-node@v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: "24"
+      - run: npm ci
+        if: hashFiles('package-lock.json') != ''
+      - uses: astral-sh/setup-uv@v7
+        if: hashFiles('pyproject.toml') != ''
+      - run: bash .aomi-baseline/baseline/typecheck.sh
+
+  agent-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    concurrency:
+      group: agent-review-${{ github.repository }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v5
+        with:
+          repository: aomi-vn/.github
+          ref: ${{ inputs.baseline-ref }}
+          path: .aomi-baseline
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
+          AGENT_REVIEW_API_KEY: ${{ secrets.AGENT_REVIEW_API_KEY }}
+        run: python3 .aomi-baseline/baseline/agent_review.py
+
+  ci-gate:
+    needs: [verify, no-comments, typecheck, agent-review]
+    if: always()
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - env:
+          NEEDS: ${{ toJSON(needs) }}
+          IS_PR: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$NEEDS" | jq -r 'to_entries[] | "\(.key)=\(.value.result)"'
+          if [ "$IS_PR" = "true" ]; then
+            required='["verify","no-comments","typecheck","agent-review"]'
+          else
+            required='["verify","typecheck"]'
+          fi
+          bad=$(printf '%s' "$NEEDS" | jq -r --argjson r "$required" '[to_entries[] | select((.key as $k | $r | index($k)) and .value.result != "success") | .key] | join(" ")')
+          if [ -n "$bad" ]; then
+            echo "::error::ci-gate: not successful: $bad"
+            exit 1
+          fi
+          echo "ci-gate: baseline passed."

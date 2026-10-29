@@ -1,0 +1,22 @@
+name: Baseline self-test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - run: python3 -m unittest discover -s baseline/tests -v
+      - run: python3 baseline/no_comments.py "origin/${{ github.base_ref }}"
+        if: github.event_name == 'pull_request'
+      - run: uvx mypy --strict baseline
