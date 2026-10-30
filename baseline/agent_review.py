@@ -7,6 +7,7 @@ from typing import Any
 
 MARKER = "<!-- aomi-agent-review:v1 -->"
 MAX_DIFF = 60000
+ATTEMPTS = 3
 PROMPT = (
     "You review one pull request for the Aomi engineering baseline. "
     "Block on: bugs, security issues, missing tests for changed behavior, hacks or shortcuts, "
@@ -37,12 +38,23 @@ def review(diff: str, title: str, body: str) -> dict[str, Any]:
             {"role": "user", "content": f"Title: {title}\n\nDescription:\n{body}\n\nDiff:\n{diff[:MAX_DIFF]}"},
         ],
     }
-    answer = call(os.environ.get("AGENT_REVIEW_URL", "https://api.deepseek.com/chat/completions"), key, payload, "POST")
-    assert isinstance(answer, dict)
-    content = answer["choices"][0]["message"]["content"]
-    verdict: dict[str, Any] = json.loads(content)
-    if verdict.get("verdict") not in ("APPROVE", "REQUEST_CHANGES"):
-        verdict = {"verdict": "REQUEST_CHANGES", "summary": "Reviewer returned no valid verdict.", "findings": []}
+    url = os.environ.get("AGENT_REVIEW_URL", "https://api.deepseek.com/chat/completions")
+    for _ in range(ATTEMPTS):
+        answer = call(url, key, payload, "POST")
+        assert isinstance(answer, dict)
+        verdict = parse_verdict(answer["choices"][0]["message"]["content"])
+        if verdict is not None:
+            return verdict
+    return {"verdict": "REQUEST_CHANGES", "summary": f"Reviewer returned no valid verdict after {ATTEMPTS} attempts; the review fails closed.", "findings": []}
+
+
+def parse_verdict(content: str) -> dict[str, Any] | None:
+    try:
+        verdict = json.loads(content)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(verdict, dict) or verdict.get("verdict") not in ("APPROVE", "REQUEST_CHANGES"):
+        return None
     return verdict
 
 
