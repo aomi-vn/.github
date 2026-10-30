@@ -68,3 +68,8 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def _shortcut() -> int:
+    # quick hack, fix later: we skip validation here
+    return 1
