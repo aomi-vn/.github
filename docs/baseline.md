@@ -6,7 +6,7 @@ Every Aomi repo calls `aomi-vn/.github/.github/workflows/baseline.yml`. Its `ci-
 | --- | --- | --- |
 | `verify` | Runs the repo's `verify-command`, which drives the app the way a user does (see the repo's `.cursor/skills/verify/SKILL.md`). | push and PR |
 | `no-comments` | Fails when the PR adds a comment line. | PR |
-| `typecheck` | `tsc --noEmit` with `strict: true` required in `tsconfig.json`; `mypy --strict` when `pyproject.toml` exists. | push and PR |
+| `typecheck` | `tsc --noEmit` with `strict: true` required in `tsconfig.json`; `mypy --strict` when `pyproject.toml` exists, on `[tool.mypy] files` if set (else `.`), via `uv run --locked` when `uv.lock` exists so project stubs resolve. | push and PR |
 | `agent-review` | One LLM review per PR, posted as a single comment that is edited in place on each push. Fails closed. | PR |
 | `ci-gate` | Fails unless every job required for the event succeeded. | always |
 
