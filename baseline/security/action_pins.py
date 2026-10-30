@@ -8,7 +8,6 @@ WORKFLOW_DIR = Path(".github/workflows")
 WORKFLOW_SUFFIXES = {".yml", ".yaml"}
 SHA_REF = re.compile(r"^[0-9a-f]{40}$")
 USES = re.compile(r"^\s*-?\s*uses:\s*(?P<target>\S+)")
-ORG_REUSABLE = re.compile(r"^aomi-vn/\.github/")
 
 
 def iter_workflows(root: Path) -> list[Path]:
@@ -34,15 +33,9 @@ def is_local_uses(repo: str) -> bool:
     return repo.startswith("./") or repo.startswith("../")
 
 
-def is_reusable_workflow(repo: str) -> bool:
-    return ".github/workflows/" in repo and repo.endswith((".yml", ".yaml"))
-
-
 def is_pinned_action(repo: str, ref: str) -> bool:
     if is_local_uses(repo):
         return True
-    if is_reusable_workflow(repo):
-        return bool(ORG_REUSABLE.match(repo))
     return bool(SHA_REF.match(ref))
 
 

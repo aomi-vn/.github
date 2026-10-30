@@ -65,7 +65,7 @@ class ActionPinsTest(unittest.TestCase):
             problems = action_pins.check_root(root)
             self.assertTrue(any("full commit SHA" in item for item in problems))
 
-    def test_allows_org_reusable_workflow(self) -> None:
+    def test_requires_sha_for_reusable_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             workflows = root / ".github" / "workflows"
@@ -74,7 +74,8 @@ class ActionPinsTest(unittest.TestCase):
                 "jobs:\n  x:\n    uses: aomi-vn/.github/.github/workflows/baseline.yml@main\n",
                 encoding="utf-8",
             )
-            self.assertEqual(action_pins.check_root(root), [])
+            problems = action_pins.check_root(root)
+            self.assertTrue(problems)
 
 
 if __name__ == "__main__":
