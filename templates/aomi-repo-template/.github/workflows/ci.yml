@@ -7,7 +7,11 @@ permissions:
   contents: read
 jobs:
   ci:
-    uses: aomi-vn/.github/.github/workflows/ci.yml@main
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    uses: aomi-vn/.github/.github/workflows/baseline.yml@main
     with:
       runs-on: '["self-hosted","aomi-pr-sandbox"]'
       command: "echo 'Replace with repo verify command'"
