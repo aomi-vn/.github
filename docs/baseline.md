@@ -59,7 +59,8 @@ jobs:
     uses: aomi-vn/.github/.github/workflows/baseline.yml@main
     with:
       verify-command: npm run verify
-    secrets: inherit
+    secrets:
+      AGENT_REVIEW_API_KEY: ${{ secrets.AGENT_REVIEW_API_KEY }}
 ```
 
 The required check name is `ci / ci-gate`, which satisfies the ruleset's `ci-gate` context. Repos that need the exact context name `ci-gate` (ruleset 26104434) add a top-level re-export job that mirrors `ci` success, as in `aomi-repo-template`.
