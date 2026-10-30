@@ -40,12 +40,10 @@ jobs:
         if: hashFiles('package.json') != ''
         with:
           node-version: "24"
-          cache: npm
       - uses: astral-sh/setup-uv@v7
         if: hashFiles('pyproject.toml') != ''
         with:
           python-version-file: .python-version
-          enable-cache: true
       - name: Run repository verify command
         env:
           VERIFY_COMMAND: ${{ inputs.command }}
