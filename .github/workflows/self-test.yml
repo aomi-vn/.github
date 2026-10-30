@@ -2,6 +2,8 @@ name: Baseline self-test
 
 on:
   pull_request:
+    # AOMI-695: also run when a draft becomes ready or a PR is reopened.
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
@@ -21,3 +23,28 @@ jobs:
       - run: python3 baseline/no_comments.py "origin/${{ github.base_ref }}"
         if: github.event_name == 'pull_request'
       - run: uvx mypy --strict baseline
+
+  # Merge check (AOMI-695, org standard from aomi-web validate.yml). The org
+  # ruleset requires this exact context "ci-gate". Skip allowlist: a job
+  # skipped on purpose (path filter / if:) counts as passing; failure or
+  # cancelled fails the gate. !cancelled(): a superseded run reports nothing.
+  # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#always
+  ci-gate:
+    needs: [test]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Check job results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          printf '%s' "${NEEDS}" | jq -r 'to_entries[] | "\(.key)=\(.value.result)"'
+          bad=$(printf '%s' "${NEEDS}" | jq -r '[to_entries[] | select(.value.result != "success" and .value.result != "skipped") | .key] | join(" ")')
+          if [ -n "${bad}" ]; then
+            echo "::error::failed or cancelled: ${bad}. ci-gate fails."
+            exit 1
+          fi
+          echo "ci-gate: every needed job succeeded or was skipped."
