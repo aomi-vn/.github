@@ -11,7 +11,12 @@ if [ -f tsconfig.json ]; then
   ran=1
 fi
 if [ -f pyproject.toml ]; then
-  uvx mypy --strict .
+  mypy_files=$(python3 -c 'import tomllib; print(" ".join(tomllib.load(open("pyproject.toml","rb")).get("tool",{}).get("mypy",{}).get("files",[])) or ".")')
+  if [ -f uv.lock ]; then
+    uv run --locked --with mypy mypy --strict $mypy_files
+  else
+    uvx mypy --strict $mypy_files
+  fi
   ran=1
 fi
 if [ "$ran" = 0 ]; then
