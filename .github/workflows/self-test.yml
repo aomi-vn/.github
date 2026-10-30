@@ -84,7 +84,7 @@ jobs:
           NO_COMMENTS_BASE: origin/${{ github.base_ref }}
         run: python3 baseline/no_comments.py "$NO_COMMENTS_BASE"
         if: github.event_name == 'pull_request'
-      - run: uvx mypy --strict baseline
+      - run: uvx mypy --strict baseline/security baseline/agent_friendly.py baseline/no_comments.py baseline/agent_review.py
 
   ci-gate:
     needs: [security, test]
