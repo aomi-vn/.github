@@ -2,6 +2,12 @@
 
 <!-- One paragraph: what this repo is and its production status. -->
 
-<!-- Toolchain versions, install command, and verify command matching CI. -->
+Aomi-level rules: read https://github.com/aomi-vn/plugin-marketplace/blob/main/plugins/aomi/company/AGENTS.md before task work. If you cannot load it, stop and report; do not proceed on repo rules alone.
 
-Company rules: [Aomi Company OS](https://app.notion.com/p/402a1698f36c81519335e93eea86da8a). Read it live.
+## Setup
+
+<!-- Toolchain versions and install command. -->
+
+## Verify
+
+<!-- Single command agents must run before merge, matching CI `command`. -->
