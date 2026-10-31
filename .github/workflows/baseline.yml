@@ -54,6 +54,8 @@ jobs:
       - name: Action SHA pins
         run: python3 .aomi-baseline/baseline/security/action_pins.py .
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: "0.13.6"
       - name: Install zizmor
         run: uv tool install "zizmor==${ZIZMOR_VERSION}"
       - name: zizmor
@@ -136,6 +138,8 @@ jobs:
         if: hashFiles('package-lock.json') != ''
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
         if: hashFiles('pyproject.toml') != ''
+        with:
+          version: "0.13.6"
       - env:
           VERIFY_COMMAND: ${{ inputs.verify-command }}
         run: bash -lc "$VERIFY_COMMAND"
@@ -186,6 +190,8 @@ jobs:
         if: hashFiles('package-lock.json') != ''
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
         if: hashFiles('pyproject.toml') != ''
+        with:
+          version: "0.13.6"
       - run: bash .aomi-baseline/baseline/typecheck.sh
 
   agent-review:
