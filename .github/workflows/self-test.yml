@@ -33,9 +33,10 @@ jobs:
         run: python3 baseline/security/github_hosted_runs_on.py .
       - name: Action SHA pins
         run: python3 baseline/security/action_pins.py .
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
-        with:
-          version: "0.13.6"
+      - name: Install uv
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 baseline/install_uv.py
       - name: Install zizmor
         run: uv tool install "zizmor==${ZIZMOR_VERSION}"
       - name: zizmor
@@ -93,9 +94,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
-        with:
-          version: "0.13.6"
+      - name: Install uv
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 baseline/install_uv.py
       - run: python3 -m unittest discover -s baseline/tests -v
       - env:
           NO_COMMENTS_BASE: origin/${{ github.base_ref }}

@@ -53,9 +53,10 @@ jobs:
         run: python3 .aomi-baseline/baseline/security/github_hosted_runs_on.py .
       - name: Action SHA pins
         run: python3 .aomi-baseline/baseline/security/action_pins.py .
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
-        with:
-          version: "0.13.6"
+      - name: Install uv
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 .aomi-baseline/baseline/install_uv.py
       - name: Install zizmor
         run: uv tool install "zizmor==${ZIZMOR_VERSION}"
       - name: zizmor
@@ -136,10 +137,18 @@ jobs:
           node-version: "24"
       - run: npm ci
         if: hashFiles('package-lock.json') != ''
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         if: hashFiles('pyproject.toml') != ''
         with:
-          version: "0.13.6"
+          repository: aomi-vn/.github
+          ref: ${{ inputs.baseline-ref }}
+          path: .aomi-baseline
+          persist-credentials: false
+      - name: Install uv
+        if: hashFiles('pyproject.toml') != ''
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 .aomi-baseline/baseline/install_uv.py
       - env:
           VERIFY_COMMAND: ${{ inputs.verify-command }}
         run: bash -lc "$VERIFY_COMMAND"
@@ -188,10 +197,11 @@ jobs:
           node-version: "24"
       - run: npm ci
         if: hashFiles('package-lock.json') != ''
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+      - name: Install uv
         if: hashFiles('pyproject.toml') != ''
-        with:
-          version: "0.13.6"
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 .aomi-baseline/baseline/install_uv.py
       - run: bash .aomi-baseline/baseline/typecheck.sh
 
   agent-review:

@@ -23,6 +23,11 @@ on:
         required: false
         type: number
         default: 30
+      baseline-ref:
+        description: Git ref for aomi-vn/.github when installing uv
+        required: false
+        type: string
+        default: main
 
 permissions: {}
 
@@ -41,11 +46,18 @@ jobs:
         if: hashFiles('package.json') != ''
         with:
           node-version: "24"
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         if: hashFiles('pyproject.toml') != ''
         with:
-          version: "0.13.6"
-          python-version-file: .python-version
+          repository: aomi-vn/.github
+          ref: ${{ inputs.baseline-ref }}
+          path: .aomi-baseline
+          persist-credentials: false
+      - name: Install uv
+        if: hashFiles('pyproject.toml') != ''
+        env:
+          UV_VERSION: "0.13.6"
+        run: python3 .aomi-baseline/baseline/install_uv.py
       - name: Run repository verify command
         env:
           VERIFY_COMMAND: ${{ inputs.command }}
