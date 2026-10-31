@@ -18,7 +18,7 @@ env:
 
 jobs:
   security:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, aomi-pr-sandbox]
     timeout-minutes: 15
     permissions:
       contents: read
@@ -29,6 +29,8 @@ jobs:
           persist-credentials: false
       - name: Workflow permissions
         run: python3 baseline/security/workflow_permissions.py .
+      - name: GitHub-hosted runs-on
+        run: python3 baseline/security/github_hosted_runs_on.py .
       - name: Action SHA pins
         run: python3 baseline/security/action_pins.py .
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
@@ -42,16 +44,27 @@ jobs:
       - name: Install actionlint
         run: |
           set -euo pipefail
+          arch=$(uname -m)
+          case "${arch}" in
+            x86_64) tgt=actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz ;;
+            aarch64|arm64) tgt=actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz ;;
+            *) echo "::error::unsupported arch: ${arch}"; exit 1 ;;
+          esac
           curl -sSfL -o "${RUNNER_TEMP}/actionlint.tgz" \
-            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${tgt}"
           tar -xzf "${RUNNER_TEMP}/actionlint.tgz" -C "${RUNNER_TEMP}" actionlint
           "${RUNNER_TEMP}/actionlint" -color
       - name: Install gitleaks
         run: |
           set -euo pipefail
+          case "${RUNNER_ARCH}" in
+            X64) arch=x64; sum="${GITLEAKS_SHA256_X64}" ;;
+            ARM64) arch=arm64; sum="${GITLEAKS_SHA256_ARM64}" ;;
+            *) echo "::error::No pinned gitleaks build for ${RUNNER_ARCH}"; exit 1 ;;
+          esac
           curl -sSfL -o "${RUNNER_TEMP}/gitleaks.tar.gz" \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256_X64}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum -c -
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch}.tar.gz"
+          echo "${sum}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum -c -
           tar -xzf "${RUNNER_TEMP}/gitleaks.tar.gz" -C "${RUNNER_TEMP}" gitleaks
       - name: gitleaks
         env:
@@ -69,7 +82,7 @@ jobs:
 
   test:
     needs: [security]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, aomi-pr-sandbox]
     timeout-minutes: 5
     permissions:
       contents: read
@@ -89,7 +102,7 @@ jobs:
   ci-gate:
     needs: [security, test]
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, aomi-pr-sandbox]
     timeout-minutes: 2
     permissions: {}
     steps:

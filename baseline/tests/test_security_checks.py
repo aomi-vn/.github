@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from baseline.security import action_pins, workflow_permissions
+from baseline.security import action_pins, github_hosted_runs_on, workflow_permissions
 
 
 class WorkflowPermissionsTest(unittest.TestCase):
@@ -76,6 +76,43 @@ class ActionPinsTest(unittest.TestCase):
             )
             problems = action_pins.check_root(root)
             self.assertTrue(problems)
+
+
+class GithubHostedRunsOnTest(unittest.TestCase):
+    def test_rejects_ubuntu_latest_runs_on(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "ci.yml").write_text(
+                "jobs:\n  x:\n    runs-on: ubuntu-latest\n    steps: []\n",
+                encoding="utf-8",
+            )
+            problems = github_hosted_runs_on.check_root(root)
+            self.assertTrue(problems)
+
+    def test_accepts_self_hosted_sandbox(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "ci.yml").write_text(
+                "jobs:\n  x:\n    runs-on: [self-hosted, aomi-pr-sandbox]\n    steps: []\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(github_hosted_runs_on.check_root(root), [])
+
+    def test_rejects_gate_runs_on_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflows = root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "ci.yml").write_text(
+                "jobs:\n  ci:\n    uses: org/.github/.github/workflows/ci.yml@main\n    with:\n      gate-runs-on: '[\"ubuntu-latest\"]'\n",
+                encoding="utf-8",
+            )
+            problems = github_hosted_runs_on.check_root(root)
+            self.assertTrue(any("gate-runs-on" in item for item in problems))
 
 
 if __name__ == "__main__":

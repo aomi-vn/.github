@@ -49,6 +49,8 @@ jobs:
           persist-credentials: false
       - name: Workflow permissions
         run: python3 .aomi-baseline/baseline/security/workflow_permissions.py .
+      - name: GitHub-hosted runs-on
+        run: python3 .aomi-baseline/baseline/security/github_hosted_runs_on.py .
       - name: Action SHA pins
         run: python3 .aomi-baseline/baseline/security/action_pins.py .
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
