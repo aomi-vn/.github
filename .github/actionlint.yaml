@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - aomi-pr-sandbox
+    - aomi-vps
+    - aomi-prod
+    - pr-sandbox
