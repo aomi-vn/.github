@@ -56,7 +56,7 @@ jobs:
           curl -sSfL -o "${RUNNER_TEMP}/actionlint.tgz" \
             "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${tgt}"
           tar -xzf "${RUNNER_TEMP}/actionlint.tgz" -C "${RUNNER_TEMP}" actionlint
-          "${RUNNER_TEMP}/actionlint" -color
+          "${RUNNER_TEMP}/actionlint" -color -config-file .github/actionlint.yaml
       - name: Install gitleaks
         run: |
           set -euo pipefail
