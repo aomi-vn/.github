@@ -38,8 +38,9 @@ def install_uv(version: str, dest_dir: Path) -> Path:
             raise RuntimeError(f"uv download failed: {url}") from exc
         with tarfile.open(archive, "r:gz") as tar:
             tar.extractall(path=tmp, filter="data")
-        src = Path(tmp) / "uv"
-        if not src.is_file():
+        candidates = list(Path(tmp).rglob("uv"))
+        src = next((path for path in candidates if path.is_file() and path.name == "uv"), None)
+        if src is None:
             raise RuntimeError("uv binary missing from release archive")
         target = dest_dir / "uv"
         shutil.copy2(src, target)
