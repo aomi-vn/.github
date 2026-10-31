@@ -1,3 +1,3 @@
 # Shared Aomi instructions
 
-Aomi-level rules: read https://github.com/aomi-vn/plugin-marketplace/blob/main/plugins/aomi/company/AGENTS.md. If you cannot load it, stop and report; do not proceed on repo rules alone.
+Company rules: [Aomi Company OS](https://app.notion.com/p/402a1698f36c81519335e93eea86da8a). Read it live.
